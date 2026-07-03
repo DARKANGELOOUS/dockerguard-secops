@@ -1,4 +1,5 @@
 import docker
+from datetime import datetime
 from app.notifier import send_discord_alert
 
 def start_event_monitoring():
@@ -16,10 +17,13 @@ def start_event_monitoring():
             action = event.get("Action")
             attributes = event.get("Actor", {}).get("Attributes", {})
             container_name = attributes.get("name", "Desconocido")
+            image_name = event.get("from", "Desconocida")
+            
+            timestamp = event.get("time")
+            event_time = datetime.fromtimestamp(timestamp).strftime('%H:%M:%S') if timestamp else datetime.now().strftime('%H:%M:%S')
 
             if action in ["die", "stop", "kill"]:
-                exit_code = event.get("Actor", {}).get("Attributes", {}).get("exitCode", "N/A")
-                
+                exit_code = attributes.get("exitCode", "N/A")
                 alert_message = f"⚠️ <@935051620515971112>\nEl contenedor **{container_name}** ha cambiado a estado: `{action}`."
                 
                 send_discord_alert(
@@ -29,7 +33,9 @@ def start_event_monitoring():
                     fields=[
                         {"name": "Contenedor", "value": container_name, "inline": True},
                         {"name": "Acción Evento", "value": action, "inline": True},
-                        {"name": "Exit Code", "value": str(exit_code), "inline": True}
+                        {"name": "Exit Code", "value": str(exit_code), "inline": True},
+                        {"name": "Imagen Docker", "value": image_name, "inline": False},
+                        {"name": "Hora del Evento", "value": event_time, "inline": True}
                     ]
                 )
             
@@ -40,7 +46,9 @@ def start_event_monitoring():
                     color=3066993,
                     fields=[
                         {"name": "Contenedor", "value": container_name, "inline": True},
-                        {"name": "Estado", "value": "Running", "inline": True}
+                        {"name": "Estado", "value": "Running", "inline": True},
+                        {"name": "Hora de Inicio", "value": event_time, "inline": True},
+                        {"name": "Imagen Docker", "value": image_name, "inline": False}
                     ]
                 )
 

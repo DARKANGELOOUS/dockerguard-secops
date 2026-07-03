@@ -19,9 +19,13 @@ def start_event_monitoring():
 
             if action in ["die", "stop", "kill"]:
                 exit_code = event.get("Actor", {}).get("Attributes", {}).get("exitCode", "N/A")
+                
+                # Modificamos el mensaje para agregar una alerta de texto al inicio que despierte al celular
+                alert_message = f"⚠️ **ATENCIÓN @everyone**\nEl contenedor **{container_name}** ha cambiado a estado: `{action}`."
+                
                 send_discord_alert(
                     title="🚨 Contenedor Detenido / Caído",
-                    message=f"El contenedor **{container_name}** ha cambiado a estado: `{action}`.",
+                    message=alert_message,
                     color=15158332,
                     fields=[
                         {"name": "Contenedor", "value": container_name, "inline": True},
